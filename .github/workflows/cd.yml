@@ -30,17 +30,17 @@ jobs:
           echo "${{ steps.changed-directories.outputs.all_changed_files }}"
           echo "changed_directories={\"dir\":${{ steps.changed-directories.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
 
-    print-out-changed-directories:
-      name: "Print out changed directories"
-      runs-on: ubuntu-latest
-      if: ${{ needs.find-updated-directory.outputs.changed_directories != '' }}
-      strategy:
-        matrix: ${{fromJson(needs.find-updated-directory.outputs.changed_directories)}}
-      needs:
-        - find-updated-directory
+  print-out-changed-directories:
+    name: "Print out changed directories"
+    runs-on: ubuntu-latest
+    if: ${{ needs.find-updated-directory.outputs.changed_directories != '' }}
+    strategy:
+      matrix: ${{fromJson(needs.find-updated-directory.outputs.changed_directories)}}
+    needs:
+      - find-updated-directory
 
-      steps:
-        - uses: actions/checkout@v4
-        - name: "Print out changed directories"
-          run: |
-            echo "Changed directories: ${{ matrix.dir }}"
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Print out changed directories"
+        run: |
+          echo "Changed directories: ${{ matrix.dir }}"
