@@ -35,38 +35,38 @@ jobs:
           echo "changed_directories={\"dir\":${{ steps.get-changed-directories.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
           echo "changed_directories_count=${{ steps.get-changed-directories.outputs.all_changed_and_modified_files_count }}" >> "$GITHUB_OUTPUT"
 
-    run-pipeline:
-      name: "Run CI/CD pipeline"
-      runs-on: ubuntu-latest
-      defaults:
-        run:
-          shell: bash
-          working-directory: ${{ matrix.dir }}
-      if: ${{ needs.find-updated-directory.outputs.changed_directories_count != '0' }}
-      strategy:
-        matrix: ${{fromJson(needs.find-updated-directory.outputs.changed_directories)}}
-      needs:
-        - find-updated-directory
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-        - name: Setup node
-          uses: actions/setup-node@v3
-          with:
-            node-version: 18.x
-            cache: npm
-            cache-dependency-path: "**/package-lock.json"
-        - name: Install dependencies
-          run: |
-            npm --prefix ../.. ci
-            npm ci
-        - name: Get package name
-          id: get-package-name
-          run: |
-            echo "package_name=$(cut -d \"=\" -f 2 <<< $(npm run env | grep \"npm_package_name\")))" >> "$GITHUB_OUTPUT"
-        - name: Print package name
-          run: |
-            echo ${{ steps.get-package-name.outputs.package_name }}
+  run-pipeline:
+    name: "Run CI/CD pipeline"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ matrix.dir }}
+    if: ${{ needs.find-updated-directory.outputs.changed_directories_count != '0' }}
+    strategy:
+      matrix: ${{fromJson(needs.find-updated-directory.outputs.changed_directories)}}
+    needs:
+      - find-updated-directory
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: npm
+          cache-dependency-path: "**/package-lock.json"
+      - name: Install dependencies
+        run: |
+          npm --prefix ../.. ci
+          npm ci
+      - name: Get package name
+        id: get-package-name
+        run: |
+          echo "package_name=$(cut -d \"=\" -f 2 <<< $(npm run env | grep \"npm_package_name\")))" >> "$GITHUB_OUTPUT"
+      - name: Print package name
+        run: |
+          echo ${{ steps.get-package-name.outputs.package_name }}
         # - name: Run tests
         #   if: github.event_name == 'pull_request'
         #   run: |
