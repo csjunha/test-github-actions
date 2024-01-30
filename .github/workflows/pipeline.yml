@@ -56,28 +56,41 @@ jobs:
           node-version: 18.x
           cache: npm
           cache-dependency-path: "**/package-lock.json"
-      - name: Install dependencies
+
+      - name: Install root dependencies
         run: |
           npm --prefix ../.. ci
+      - name: Install dependencies (dev)
+        if: github.event_name == 'pull_request'
+        run: |
           npm ci
+      - name: Install dependencies (prod)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          npm ci --omit=dev
+
       - name: Get package name
         id: get-package-name
         run: |
           echo "package_name=$(npm run env | grep "npm_package_name" | cut -d "=" -f 2)" >> "$GITHUB_OUTPUT"
-      - name: Print package name
+
+      - name: Run tests
+        if: github.event_name == 'pull_request'
         run: |
-          echo ${{ steps.get-package-name.outputs.package_name }}
-        # - name: Run tests
-        #   if: github.event_name == 'pull_request'
-        #   run: |
-        #     npm run lint
-        #     npm test
-        # - name: Deploy
-        #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        #   env:
-        #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        #     AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          npm run lint
+          npm test
+
+      - name: Deploy
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+        run: |
+          echo "rm -rf build && mkdir build"
+          echo "zip -qr ./build/${{ steps.get-package-name.outputs.package_name }}.zip * -x \"test/*\" \"mock/*\" \"package-lock.json\" \"build/*\" \"coverage/*\" \"v-env/*\" \"__pycache__/*\""
+          echo "aws s3 cp ./build/${{ steps.get-package-name.outputs.package_name }}.zip s3://notifly-lambda-builds/"
+          echo "aws lambda update-function-code --function-name ${{ steps.get-package-name.outputs.package_name }} --s3-bucket notifly-lambda-builds --s3-key ${{ steps.get-package-name.outputs.package_name }}.zip"
 
   # hahaha:
   #   name: "Deploy updated lambdas"
