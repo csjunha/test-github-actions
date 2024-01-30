@@ -1,4 +1,4 @@
-name: "CD"
+name: "Deploy updated lambdas"
 
 on:
   push:
@@ -6,13 +6,14 @@ on:
       - main
 
 jobs:
-  # Deploy only for the changed directory
   find-updated-directory:
+    name: "Find updated directory"
     runs-on: ubuntu-latest
     outputs:
       changed_directories: ${{ steps.set-output.outputs.changed_directories }}
+
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Get changed directories
@@ -25,17 +26,21 @@ jobs:
           quotepath: false
       - name: "Set output in the matrix format"
         id: set-output
-        run: echo "changed_directories={\"dir\":${{ steps.changed-directories.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "${{ steps.changed-directories.outputs.all_changed_files }}"
+          echo "changed_directories={\"dir\":${{ steps.changed-directories.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
 
     print-out-changed-directories:
+      name: "Print out changed directories"
       runs-on: ubuntu-latest
       if: ${{ needs.find-updated-directory.outputs.changed_directories != '' }}
       strategy:
         matrix: ${{fromJson(needs.find-updated-directory.outputs.changed_directories)}}
       needs:
         - find-updated-directory
+
       steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - name: "Print out changed directories"
           run: |
             echo "Changed directories: ${{ matrix.dir }}"
