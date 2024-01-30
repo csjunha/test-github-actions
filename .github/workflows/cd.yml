@@ -27,7 +27,7 @@ jobs:
         id: set-output
         run: echo "changed_directories={\"dir\":${{ steps.changed-directories.outputs.all_changed_files }}}" >> "$GITHUB_OUTPUT"
 
-    print-out-chaned-directories:
+    print-out-changed-directories:
       runs-on: ubuntu-latest
       if: ${{ needs.find-updated-directory.outputs.changed_directories != '' }}
       strategy:
