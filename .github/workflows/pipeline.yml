@@ -63,7 +63,7 @@ jobs:
       - name: Get package name
         id: get-package-name
         run: |
-          echo "package_name=$(cut -d \"=\" -f 2 <<< $(npm run env | grep \"npm_package_name\")))" >> "$GITHUB_OUTPUT"
+          echo "package_name=$(cut -d \"=\" -f 2 <<< $(npm run env | grep \"npm_package_name\")" >> "$GITHUB_OUTPUT"
       - name: Print package name
         run: |
           echo ${{ steps.get-package-name.outputs.package_name }}
